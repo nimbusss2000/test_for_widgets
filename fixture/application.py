@@ -18,7 +18,7 @@ class Application:
             "profile.default_content_setting_values.media_stream_mic": 1,
             "profile.default_content_setting_values.notifications": 1
         })
-
+        # for headless chromium:
         # self.chrome_options.headless = True
         # self.wd = webdriver.Chrome(service=self.servise, chrome_options=self.chrome_options)
 
@@ -27,6 +27,7 @@ class Application:
         self.session = SessionHelper(self)
         self.deal = DealHelper(self)
 
+    # for headless chromium:
     # def running_tests_in_headless_chrome(self, driver, download_dir):
     #     # add missing support for chrome "send_command"  to selenium webdriver
     #     driver.command_executor._commands["send_command"] = ("POST", '/session/$sessionId/chromium/send_command')

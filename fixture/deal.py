@@ -1,6 +1,7 @@
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
 import time
+from model.deal import Deal
 
 
 class DealHelper:
@@ -19,7 +20,9 @@ class DealHelper:
         # create quick deal
         time.sleep(3)
         try:
-            wd.find_element(By.CSS_SELECTOR, 'div[class="pipeline_leads__quick_add_button "]').click()
+            wd.find_element(By.XPATH, "//div[@id='pipeline_items__list_35986612']/div/div").click()
+            time.sleep(2)
+            # wd.find_element(By.CSS_SELECTOR, 'div[class="pipeline_leads__quick_add__wrapper clearfix"]').click()
         except TimeoutError as exc:
             print(f'{exc}')
             wd.find_element(By.CSS_SELECTOR, 'div[class="pipeline_leads__quick_add_button "]').click()
@@ -68,22 +71,58 @@ class DealHelper:
         element = wd.find_element(By.CSS_SELECTOR, "body")
         actions = ActionChains(wd)
         actions.move_to_element(element).perform()
+        self.change_deal_form()
         wd.execute_script("window.scrollTo(0,0)")
         wd.find_element(By.CSS_SELECTOR, ".svg-common--arrow-left-dims").click()
+
+    def change_deal_form(self, deal_name="test_name", email="test@mail.com", phone="89999999999"):
+        wd = self.app.wd
+        time.sleep(2)
+        # change name
+        wd.find_element(By.ID, "person_n").click()
+        wd.find_element(By.ID, "person_n").click()
+        wd.find_element(By.ID, "person_n").clear()
+        wd.find_element(By.ID, "person_n").send_keys(deal_name)
+        # change email
+        wd.find_element(By.NAME, "CFV[207473]").click()
+        wd.find_element(By.NAME, "CFV[207473]").send_keys(email)
+        # change phone
+        wd.find_element(By.NAME, "CFV[184723]").click()
+        wd.find_element(By.NAME, "CFV[184723]").send_keys(phone)
+        # submit
+        wd.find_element(By.CSS_SELECTOR, "#save_and_close_contacts_link .button-input-inner__text").click()
 
     def dial_the_number(self, number):
         wd = self.app.wd
         wd.find_element(By.CSS_SELECTOR, ".calls-list-toggler__icon").click()
         wd.find_element(By.ID, "itl_rtc__dial_btn").click()
-        wd.find_element(By.CSS_SELECTOR, ".itoolabs_rtc_call__dial_display__phone").send_keys(number)
-        wd.find_element(By.ID, "itl_rtc__hung_up_btn").click()
-        time.sleep(4)
-        wd.find_element(By.ID, "itl_rtc__hung_up_btn").click()
+        wd.find_element(By.CSS_SELECTOR, ".itoolabs_rtc_call__dial_display__phone").send_keys(number) # если ip телефония будет не от itoolabs - нужно поменять селектор
+        self.press_the_tube()
+        time.sleep(8)
+        if len(wd.find_elements(By.ID, "itl_rtc__hung_up_btn")) > 1:
+            self.press_the_tube()
         time.sleep(2)
 
+    def press_the_tube(self):
+        wd = self.app.wd
+        wd.find_element(By.ID, "itl_rtc__hung_up_btn").click()
+
     def count(self):
-        #todo неправильный каунт?
         wd = self.app.wd
         self.open_deal_page()
         return len(wd.find_elements(By.CSS_SELECTOR, 'div[class="pipeline_leads__info"]'))
+
+    def get_deal_list(self):
+        wd = self.app.wd
+        self.open_deal_page()
+        all_deals = wd.find_elements(By.CSS_SELECTOR, 'div[class="pipeline_leads__info"]')
+        deals_list = []
+        for deal in all_deals:
+            # TODO почему не берется id для new_deals?
+            text = deal.find_element(By.CSS_SELECTOR, 'a[class="pipeline_leads__title-text h-text-overflow js-navigate-link"]').text
+            deal_id = deal.get_attribute('id')
+            id = deal_id.split('_')[1]
+            deals_list.append(Deal(deal_name=text, id=id))
+        return deals_list
+
 
