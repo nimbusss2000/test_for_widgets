@@ -12,9 +12,9 @@ class Application:
     def __init__(self):
         self.servise = Service(executable_path='/home/eugryumova/chromedriver/chromedriver')
 
-        self.chrome_options = webdriver.ChromeOptions()
-        self.chrome_options.add_argument("--disable-infobars")
-        self.chrome_options.add_experimental_option("prefs", {
+        self.options = webdriver.ChromeOptions()
+        self.options.add_argument("--disable-infobars")
+        self.options.add_experimental_option("prefs", {
             "profile.default_content_setting_values.media_stream_mic": 1,
             "profile.default_content_setting_values.notifications": 1
         })
@@ -22,7 +22,7 @@ class Application:
         # self.chrome_options.headless = True
         # self.wd = webdriver.Chrome(service=self.servise, chrome_options=self.chrome_options)
 
-        self.wd = webdriver.Chrome(service=self.servise, chrome_options=self.chrome_options)
+        self.wd = webdriver.Chrome(service=self.servise, options=self.options)
         self.wd.implicitly_wait(15)
         self.session = SessionHelper(self)
         self.deal = DealHelper(self)

@@ -1,6 +1,12 @@
+import selenium
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
+from selenium.common.exceptions import StaleElementReferenceException, NoSuchElementException
+from selenium.webdriver.support import expected_conditions as EC
 import time
+
+from selenium.webdriver.support.wait import WebDriverWait
+
 from model.deal import Deal
 
 
@@ -15,18 +21,20 @@ class DealHelper:
 
     def create(self, deal):
         wd = self.app.wd
-        time.sleep(1)
+        time.sleep(2)
         self.open_deal_page()
         # create quick deal
-        time.sleep(3)
+        # time.sleep(5)
         try:
-            wd.find_element(By.XPATH, "//div[@id='pipeline_items__list_35986612']/div/div").click()
+            # time.sleep(5)
+            # wd.find_element(By.XPATH, "//div[@id='pipeline_items__list_35986612']/div/div").click()
             time.sleep(2)
-            # wd.find_element(By.CSS_SELECTOR, 'div[class="pipeline_leads__quick_add__wrapper clearfix"]').click()
+            wd.find_element(By.CSS_SELECTOR, 'div[class="pipeline_leads__quick_add_button "]').click()
         except TimeoutError as exc:
             print(f'{exc}')
             wd.find_element(By.CSS_SELECTOR, 'div[class="pipeline_leads__quick_add_button "]').click()
         # fill deal form
+        # todo добавить функцию рандомизации входных данных для контакта и компании, их названия каждый раз должны быть уникальными
         wd.find_element(By.ID, "fieldname").clear()
         wd.find_element(By.ID, "fieldname").send_keys(deal.deal_name)
         wd.find_element(By.NAME, "1_fieldname").click()
@@ -37,6 +45,9 @@ class DealHelper:
         wd.find_element(By.NAME, "3_fieldname").send_keys(deal.company_name)
         # submit deal creation
         wd.find_element(By.XPATH, "//button[@id='quick_add_form_button']/span/span").click()
+        time.sleep(2)
+        # if len(wd.find_elements(By.CSS_SELECTOR, 'span[class="button-input-inner__text"]')) > 0:
+        #     wd.find_element(By.CSS_SELECTOR, 'span[class="button-input-inner__text"]').click()
 
     def delete_first_deal(self):
         wd = self.app.wd
@@ -115,13 +126,14 @@ class DealHelper:
     def get_deal_list(self):
         wd = self.app.wd
         self.open_deal_page()
-        all_deals = wd.find_elements(By.CSS_SELECTOR, 'div[class="pipeline_leads__info"]')
+        all_deals = wd.find_elements(By.CSS_SELECTOR,
+                                     'div[class="pipeline_leads__item pipeline_leads__item_flex js-hs-prevent js-pipeline-sortable pipeline_leads__item-sortable ui-sortable-handle"]')
+        time.sleep(2)
         deals_list = []
         for deal in all_deals:
-            # TODO почему не берется id для new_deals?
-            text = deal.find_element(By.CSS_SELECTOR, 'a[class="pipeline_leads__title-text h-text-overflow js-navigate-link"]').text
-            deal_id = deal.get_attribute('id')
-            id = deal_id.split('_')[1]
+            id = deal.get_attribute('data-id')
+            text = deal.find_element(By.CSS_SELECTOR,
+                                     'a[class="pipeline_leads__title-text h-text-overflow js-navigate-link"]').text
             deals_list.append(Deal(deal_name=text, id=id))
         return deals_list
 
