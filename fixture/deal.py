@@ -1,12 +1,9 @@
-import selenium
+
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
-from selenium.common.exceptions import StaleElementReferenceException, NoSuchElementException
+from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
-
-from selenium.webdriver.support.wait import WebDriverWait
-
 from model.deal import Deal
 
 
@@ -31,7 +28,6 @@ class DealHelper:
             print(f'{exc}')
             wd.find_element(By.CSS_SELECTOR, 'div[class="pipeline_leads__quick_add_button "]').click()
         # fill deal form
-        # todo добавить функцию рандомизации входных данных для контакта и компании, их названия каждый раз должны быть уникальными
         wd.find_element(By.ID, "fieldname").clear()
         wd.find_element(By.ID, "fieldname").send_keys(deal.deal_name)
         wd.find_element(By.NAME, "1_fieldname").click()
@@ -139,5 +135,21 @@ class DealHelper:
                                          'a[class="pipeline_leads__title-text h-text-overflow js-navigate-link"]').text
                 self.deal_cache.append(Deal(deal_name=text, id=id))
         return list(self.deal_cache)  # возвращаем копию кэша, т к основной кэш может быть повреджен
+
+    def wait_incoming_call(self):
+        wd = self.app.wd
+        time.sleep(5)
+        try:
+            elem = WebDriverWait(wd, 25).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, '.answer-button > .phone_button_text')))
+            elem.click()
+        except TimeoutError:
+            print('Звонок не поступил')
+        time.sleep(3)
+        wd.find_element(By.CSS_SELECTOR, ".itl_rtc_ico_hangup").click() # это рабочий селектор
+        time.sleep(2)
+        wd.find_element(By.CSS_SELECTOR, 'span[class="button-input-inner"]').click()
+        self.open_the_created_deal()
+        self.deal_cache = None
 
 
