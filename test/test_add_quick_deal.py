@@ -1,13 +1,28 @@
 # -*- coding: utf-8 -*-
-
+import pytest
+import random
+import string
 from model.deal import Deal
 
 
-def test_add_quick_deal(app):
+def random_string(prefix, maxlen):
+    symbols = string.ascii_letters + string.digits
+    return prefix + ''.join([random.choice(symbols) for i in range(random.randrange(maxlen))])
+
+
+testdata = [Deal(deal_name=random_string('Сделка_', 5), contact_name=random_string('Контакт_', 6),
+                 company_name=random_string('Компания_', 6)) for i in range(2)]
+
+
+@pytest.mark.parametrize('deal', testdata, ids=[repr(x) for x in testdata])
+def test_add_quick_deal(app, deal):
     old_deals = app.deal.get_deal_list()
-    app.deal.create(Deal(deal_name="Python_test", contact_name="contact_name", company_name="company_name"))
+    app.deal.create(deal)
+    assert len(old_deals) + 1 == app.deal.count()
     new_deals = app.deal.get_deal_list()
-    assert len(old_deals) + 1 == len(new_deals)
+    old_deals.append(deal)
+    assert sorted(old_deals, key=Deal.id_or_max) == sorted(new_deals, key=Deal.id_or_max)
+
 
 
 

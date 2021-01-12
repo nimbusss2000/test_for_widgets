@@ -24,10 +24,7 @@ class DealHelper:
         time.sleep(2)
         self.open_deal_page()
         # create quick deal
-        # time.sleep(5)
         try:
-            # time.sleep(5)
-            # wd.find_element(By.XPATH, "//div[@id='pipeline_items__list_35986612']/div/div").click()
             time.sleep(2)
             wd.find_element(By.CSS_SELECTOR, 'div[class="pipeline_leads__quick_add_button "]').click()
         except TimeoutError as exc:
@@ -48,6 +45,7 @@ class DealHelper:
         time.sleep(2)
         # if len(wd.find_elements(By.CSS_SELECTOR, 'span[class="button-input-inner__text"]')) > 0:
         #     wd.find_element(By.CSS_SELECTOR, 'span[class="button-input-inner__text"]').click()
+        self.deal_cache = None
 
     def delete_first_deal(self):
         wd = self.app.wd
@@ -65,6 +63,7 @@ class DealHelper:
         wd.find_element(By.CSS_SELECTOR, "#card_delete .button-input__context-menu__item__text").click()
         wd.find_element(By.CSS_SELECTOR, ".modal-body__actions:nth-child(5) .button-input-inner__text").click()
         time.sleep(2)
+        self.deal_cache = None
 
     def open_first_deal(self):
         wd = self.app.wd
@@ -75,6 +74,7 @@ class DealHelper:
         time.sleep(4)
         self.dial_the_number(number='+79771482566')
         self.open_the_created_deal()
+        self.deal_cache = None
 
     def open_the_created_deal(self):
         wd = self.app.wd
@@ -107,7 +107,7 @@ class DealHelper:
         wd = self.app.wd
         wd.find_element(By.CSS_SELECTOR, ".calls-list-toggler__icon").click()
         wd.find_element(By.ID, "itl_rtc__dial_btn").click()
-        wd.find_element(By.CSS_SELECTOR, ".itoolabs_rtc_call__dial_display__phone").send_keys(number) # если ip телефония будет не от itoolabs - нужно поменять селектор
+        wd.find_element(By.CSS_SELECTOR, ".itoolabs_rtc_call__dial_display__phone").send_keys(number)  # если ip телефония будет не от itoolabs - нужно поменять селектор
         self.press_the_tube()
         time.sleep(8)
         if len(wd.find_elements(By.ID, "itl_rtc__hung_up_btn")) > 1:
@@ -123,18 +123,21 @@ class DealHelper:
         self.open_deal_page()
         return len(wd.find_elements(By.CSS_SELECTOR, 'div[class="pipeline_leads__info"]'))
 
+    deal_cache = None
+
     def get_deal_list(self):
-        wd = self.app.wd
-        self.open_deal_page()
-        all_deals = wd.find_elements(By.CSS_SELECTOR,
-                                     'div[class="pipeline_leads__item pipeline_leads__item_flex js-hs-prevent js-pipeline-sortable pipeline_leads__item-sortable ui-sortable-handle"]')
-        time.sleep(2)
-        deals_list = []
-        for deal in all_deals:
-            id = deal.get_attribute('data-id')
-            text = deal.find_element(By.CSS_SELECTOR,
-                                     'a[class="pipeline_leads__title-text h-text-overflow js-navigate-link"]').text
-            deals_list.append(Deal(deal_name=text, id=id))
-        return deals_list
+        if self.deal_cache is None:
+            wd = self.app.wd
+            self.open_deal_page()
+            all_deals = wd.find_elements(By.CSS_SELECTOR,
+                                         'div[class="pipeline_leads__item pipeline_leads__item_flex js-hs-prevent js-pipeline-sortable pipeline_leads__item-sortable ui-sortable-handle"]')
+            time.sleep(2)
+            self.deal_cache = []
+            for deal in all_deals:
+                id = deal.get_attribute('data-id')
+                text = deal.find_element(By.CSS_SELECTOR,
+                                         'a[class="pipeline_leads__title-text h-text-overflow js-navigate-link"]').text
+                self.deal_cache.append(Deal(deal_name=text, id=id))
+        return list(self.deal_cache)  # возвращаем копию кэша, т к основной кэш может быть повреджен
 
 
